@@ -1,4 +1,4 @@
-import { Button, Table, Tag, type TableProps } from "antd"
+import { Button, Input, Table, Tag, type TableProps } from "antd"
 import axios from "axios"
 import { useEffect, useState } from "react"
 
@@ -10,8 +10,14 @@ interface Data {
   minimumFee: number
 }
 
+const getPrice = (fee: number) => {
+  return ((fee * 180 + 1999 + 546) * 0.0004).toFixed(2)
+}
+
 function IndexPopup() {
   const [dataSource, setDataSource] = useState([])
+  const [customGasFee, setCustomGasFee] = useState("")
+
   const onGetGasFeeOnline = async () => {
     const { data } = await axios.get<Data>(
       "https://mempool.space/api/v1/fees/recommended"
@@ -27,23 +33,12 @@ function IndexPopup() {
       key: "fastestFee",
       dataIndex: "fastestFee",
       render(text) {
-        return <Tag color="error">{text}</Tag>
-      }
-    },
-    {
-      title: "半小时费用",
-      key: "halfHourFee",
-      dataIndex: "halfHourFee",
-      render(text) {
-        return <Tag color="warning">{text}</Tag>
-      }
-    },
-    {
-      title: "一小时费用",
-      key: "hourFee",
-      dataIndex: "hourFee",
-      render(text) {
-        return <Tag color="warning">{text}</Tag>
+        return (
+          <span style={{ display: "flex", alignItems: "center" }}>
+            <Tag color="error">{text}</Tag>
+            <span>${getPrice(text)}</span>
+          </span>
+        )
       }
     },
     {
@@ -51,7 +46,12 @@ function IndexPopup() {
       key: "economyFee",
       dataIndex: "economyFee",
       render(text) {
-        return <Tag color="warning">{text}</Tag>
+        return (
+          <span style={{ display: "flex", alignItems: "center" }}>
+            <Tag color="warning">{text}</Tag>
+            <span>${getPrice(text)}</span>
+          </span>
+        )
       }
     },
     {
@@ -59,7 +59,12 @@ function IndexPopup() {
       key: "minimumFee",
       dataIndex: "minimumFee",
       render(text) {
-        return <Tag color="success">{text}</Tag>
+        return (
+          <span style={{ display: "flex", alignItems: "center" }}>
+            <Tag color="success">{text}</Tag>
+            <span>${getPrice(text)}</span>
+          </span>
+        )
       }
     }
   ]
@@ -73,7 +78,36 @@ function IndexPopup() {
       style={{
         width: 400
       }}>
-      <Button onClick={onGetGasFeeOnline}>获取最新数据</Button>
+      <div
+        style={{
+          display: "flex",
+          gap: 50,
+          alignItems: "center",
+          marginBottom: 10
+        }}>
+        <Button onClick={onGetGasFeeOnline}>获取最新数据</Button>
+        <Input
+          value={customGasFee}
+          onChange={({ target }) =>
+            setCustomGasFee((target as HTMLInputElement).value)
+          }
+          placeholder="请输入自定义费用"
+        />
+      </div>
+      {customGasFee && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            marginBottom: 10
+          }}>
+          <Tag>自定义费用</Tag>
+          <Tag color="warning">{customGasFee}</Tag>
+          <Tag color="success">
+            <span>${getPrice(+customGasFee)}</span>
+          </Tag>
+        </div>
+      )}
       <Table columns={columns} dataSource={dataSource} />
     </div>
   )
